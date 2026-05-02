@@ -57,24 +57,35 @@ the public internet to claim the admin account.
 
 ### 4. Custom domain (`pb.bythe.rocks`)
 
-In your DNS provider for `bythe.rocks`, add:
+Tell Fly about the domain first — the command prints the exact DNS records
+you need to set, so this is the source of truth, not this README:
+
+```sh
+fly certs add pb.bythe.rocks --app pb-bythe-rocks
+```
+
+For a subdomain, Fly recommends a single CNAME pointing at the app's
+`.fly.dev` hostname (the `fly certs add` output will spell out the exact
+target):
 
 ```
 Type:   CNAME
 Name:   pb
-Value:  pb-bythe-rocks.fly.dev
+Value:  pb-bythe-rocks.fly.dev   # confirm against the `fly certs add` output
 TTL:    auto / 300
-Proxy:  off  (if Cloudflare — Litestream and PB don't need the proxy)
+Proxy:  off  (if Cloudflare — keep DNS-only, no orange cloud)
 ```
 
-Then tell Fly to provision a Let's Encrypt cert for it:
+Then watch the cert issue (Let's Encrypt, ~30s):
 
 ```sh
-fly certs add pb.bythe.rocks --app pb-bythe-rocks
-fly certs show pb.bythe.rocks --app pb-bythe-rocks   # watch it go green
+fly certs show pb.bythe.rocks --app pb-bythe-rocks
 ```
 
-Once the cert is issued, `https://pb.bythe.rocks` serves PocketBase.
+Once it's green, `https://pb.bythe.rocks` serves PocketBase. If validation
+stalls, `fly certs show` lists the verification records still missing —
+usually an `_acme-challenge` CNAME or `_fly-ownership` TXT, which only
+matters for proxied / wildcard / unusual setups.
 
 ### 5. Cloudflare R2 + Litestream
 
